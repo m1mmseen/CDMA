@@ -11,7 +11,7 @@
 
 
 ## About the project
-<img alt="Static Badge" src="https://img.shields.io/badge/Status-Coming Soon-orange">
+Code Division Multiple Access (CDMA) is a digital cellular technology that allows multiple users to share the same frequency spectrum simultaneously. For this purpose, a small Java program was designed that encodes and decodes the messages. Among other things, bit shifting was used for this.
 
 ## TechStack
 | Backend | Frontend |
@@ -19,7 +19,7 @@
 | Java |  Console |
 
 ## Getting started
-<img alt="Static Badge" src="https://img.shields.io/badge/Status-Coming Soon-orange">
+After cloning this repository you can run the main class in your code editor.
 
 ## License
 GPL-3.0 license
