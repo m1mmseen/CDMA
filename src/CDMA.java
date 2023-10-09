@@ -1,6 +1,7 @@
 
 public class CDMA {
     static class Chip {
+    static class Chip {
         private int[] S = new int[4];
 
         public Chip(int s1, int s2, int s3, int s4) {
@@ -14,85 +15,105 @@ public class CDMA {
             return S[index];
         }
     }
-
     static class BitMessage {
 
-        private int[] message = new int[4];
+        public static final int MESSAGE_SIZE = 4;
+        private int[] message = new int[MESSAGE_SIZE];
 
         @Override
         public String toString() {
             StringBuilder s = new StringBuilder("(");
-            for (int i = 0; i < 4; i++) {
-                if (i != 0) {
+            for (int i : message) {
+                if (s.length() > 1) {
                     s.append(", ");
                 }
-                s.append(String.valueOf(message[i]));
+                s.append(i);
             }
             s.append(")");
+
             return s.toString();
         }
 
         public BitMessage encode(Chip c, boolean bit) {
 
-            for (int s = 0; s < 4; s++) {
-                if (!bit) {
-                    switch (c.get(s)) {
-                        case 1 -> message[s] -= 1;
-                        case -1 -> message[s] += 1;
-                    }
-                } else {
-                    message[s] += c.get(s);
-                }
+
+            for (int s = 0; s < MESSAGE_SIZE; s++) {
+                message[s] += bit ? c.get(s) : -c.get(s);
             }
             return this;
         }
 
         public boolean decode(Chip c) {
             int sum = 0;
-            for (int i = 0; i < 4; i++) {
+            for (int i = 0; i < MESSAGE_SIZE; i++) {
                 sum += c.get(i) * message[i];
             }
-            double b = sum;
-            sum = (int) (0.25 * b);
-            return switch (sum) {
-                case 1 -> true;
-                case -1 -> false;
-                default -> false;
-            };
+            sum >>= 2;
+            return sum == 1;
         }
     }
 
     static class ByteMessage {
         private BitMessage[] bits = new BitMessage[8];
 
+        //In the constructor, the inner BitMessage arrays are inserted to avoid a NullPointerException
         public ByteMessage() {
-
+            for (int i = 0; i < 8; i++) {
+                bits[i] = new BitMessage();
+            }
         }
-
+        // To generate the correct format for the output, the method of the Object class is overridden.
         @Override
         public String toString() {
-            return "String";
+
+            StringBuilder s = new StringBuilder();
+            for (BitMessage bitMessage : bits) {
+                if (s.length() > 0) {
+                    s.append(" ");
+                }
+                s.append(bitMessage);
+            }
+            return s.toString();
         }
 
+    // To encode the ByteMessage, we firstly rely on the method from the BitMessage class. On the other hand, the specific bit of the ASCII character at position 128 is compared. The corresponding value (query result true or false, i.e., 1, -1) is then passed to the BitMessage encode method as the second parameter. Afterward, using bit shifting, the next position of the bit code is "shifted" to position 128 and can be treated in the same manner
         public ByteMessage encode(Chip chip, char c) {
-            String string = String.valueOf(c);
-            byte[] bytes = string.getBytes();
-            StringBuilder binary = new StringBuilder();
-            for (byte b : bytes) {
-                int val = b;
-                for (int i = 0; i < 8; i++) {
-                    binary.append((val & 128) == 0 ? 0 : 1);
-                    val <<= 1;
-                }
+            int input = c;
+            for (int i = 7; i >= 0; i--) {
+                bits[i].encode(chip, (input & 128) != 0);
+                input <<= 1;
             }
             return this;
 
         }
 
-        public char decode(Chip chip) {
 
+        //Complementary to the encode method, we again work with a bitwise operator. However, this time a value isn't being read, but rather being "written." Using the BitMessage decode method, the boolean value is determined. If this value is "True," a one is "written" at the corresponding bit code position. If not, the loop iteration ends and at the beginning of the new iteration, a bit shift occurs.
+            public char decode(Chip chip) {
+            int output = 0;
+
+            for (int i = 7; i >= 0; i--) {
+                output <<= 1;
+                if(bits[i].decode(chip)) {
+                    output |= 1;
+                }
+            }
+            return (char) output;
         }
 
+                //ALTERNATIV :)
+//        public char decode(Chip chip) {
+//            char output = 0;
+//            int bit = 128;
+//            for (int i = 7; i >= 0; i--) {
+//
+//                if (bits[i].decode(chip)) {
+//                    output += bit;
+//                }
+//                bit >>= 1;
+//            }
+//            return output;
+//        }
     }
 
     public static void main(String[] args) {
